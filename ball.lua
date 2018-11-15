@@ -70,6 +70,7 @@ function Ball:hit(distance, finalX, finalY)
     self.bounces = 0
 end
 
+
 _shotComplete = function(self)
     self.speedX = 0
     self.speedY = 0
@@ -82,13 +83,13 @@ end
 _calculateBounce = function(self, courseTypeID)
     if courseTypeID == Constants.course_green then
         self.ballRadiusIncrease = self.ballRadiusIncrease / 2.5
-        self.speedX = self.speedX * 0.9
-        self.speedY = self.speedY * 0.9
+        self.speedX = self.speedX * 0.7
+        self.speedY = self.speedY * 0.7
         self.moveTime = self.initialMoveTime / 4
     elseif courseTypeID == Constants.course_fairway then
         self.ballRadiusIncrease = self.ballRadiusIncrease / 3
-        self.speedX = self.speedX * 0.8
-        self.speedY = self.speedY * 0.8
+        self.speedX = self.speedX * 0.7
+        self.speedY = self.speedY * 0.7
         self.moveTime = self.initialMoveTime / 5
     elseif courseTypeID == Constants.course_rough then
         self.ballRadiusIncrease = self.ballRadiusIncrease / 3
@@ -102,13 +103,13 @@ end
 
 _calculateRoll = function(self, courseTypeID)
     if courseTypeID == Constants.course_green then
-        self.speedX = self.speedX * 0.97
-        self.speedY = self.speedY * 0.97
+        self.speedX = self.speedX * 0.95
+        self.speedY = self.speedY * 0.95
     elseif courseTypeID == Constants.course_fairway then
-        self.speedX = self.speedX * 0.94
-        self.speedY = self.speedY * 0.94
+        self.speedX = self.speedX * 0.92
+        self.speedY = self.speedY * 0.92
     else
-        self.speedX = 0
-        self.speedY = 0
+        self.speedX = 0.1
+        self.speedY = 0.1
     end
 end

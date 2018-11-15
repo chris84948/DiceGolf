@@ -60,7 +60,7 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":8,
+ "nextlayerid":10,
  "nextobjectid":3,
  "orientation":"orthogonal",
  "properties":[
@@ -68,6 +68,11 @@
          "name":"length",
          "type":"int",
          "value":376
+        }, 
+        {
+         "name":"par",
+         "type":"int",
+         "value":4
         }],
  "renderorder":"right-down",
  "tiledversion":"1.2.0",

@@ -13,7 +13,7 @@ function CourseLoader:loadCourse(num, x, y)
     file:close()
     local courseTable = Json.decode(jsonString)
 
-    local course = Course(x, y, courseTable.width, courseTable.height, courseTable.tileheight, courseTable.properties[1].value)
+    local course = Course(x, y, courseTable.width, courseTable.height, courseTable.tileheight, courseTable.properties)
     
     for i, layer in ipairs(courseTable.layers) do
         if string.upper(layer.name) == "TILE LAYER 1" then
