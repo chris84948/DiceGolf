@@ -42,18 +42,24 @@ function love.load()
         TextField(390, 630, "", 28, 0.5, 0),
     }
 
-    clubSelector = SelectionControl(20, 290, "Club", function() return player:getClub():getName() end, function() player:getPreviousClub() end, 
-                                    function() player:getNextClub() end, function() return player:canGetPreviousClub() end, function() return player:canGetNextClub() end)
-    powerSelector = SelectionControl(275, 290, "Power", getNumber, lessThan_Clicked, greaterThan_Clicked, canLessThan, canGreaterThan)
+    course = CourseLoader:loadCourse(1, 780, 20)
+    course:setShotPower(player:getClub():getDistance())
+
+    clubSelector = SelectionControl(20, 290, "Club", function() return player:getClub():getName() end, 
+                                                     setPreviousClub, setNextClub,
+                                                     function() return player:canGetPreviousClub() end, 
+                                                     function() return player:canGetNextClub() end)
+    powerSelector = SelectionControl(275, 290, "Power", function() return course:getShotPower() end, 
+                                                        function() course:changeShotPower(-10) end, 
+                                                        function() course:changeShotPower(10) end, 
+                                                        function() return course:getShotPower() >= 10 end, 
+                                                        function() return course:getShotPower() <= player:getClub():getDistance() - 10 end)
     angleSelector = SelectionControl(530, 290, "Angle", getNumber, function() course:changeShotAngle(-1) end, function() course:changeShotAngle(1) end)
 
     diceButton = Button(140, 410, "buttons", 64, 0, diceButton_Clicked)
     diceHand = DiceHand(90, 500, 5, 70, rollComplete)
 
     spinner = Spinner(140, 674)
-
-    course = CourseLoader:loadCourse(1, 780, 20)
-    course:setShotPower(150)
 end
 
 function love.update(dt)
@@ -128,37 +134,29 @@ function rollComplete(score, description)
     spinner:show()
 end
 
-
-function getNumber()
-    return "Num = " .. num
-end
-
- function diceButton_Clicked()
+function diceButton_Clicked()
     fields[Constants.field_rolls]:clear()
     fields[Constants.field_rollResult]:clear()
     diceHand:roll()
- end
-
- function lessThan_Clicked()
-    num = num - 1
- end
-
- function greaterThan_Clicked()
-    num = num + 1
- end
-
-function canLessThan()
-    if num <= 0 then
-        return false
-    else
-        return true
-    end
 end
 
-function canGreaterThan()
-    if num >= 100 then
-        return false
-    else
-        return true
-    end
+function setPreviousClub()
+    player:getPreviousClub()
+    course:setShotPower(player:getClub():getDistance())
+    powerSelector:refresh()
+end
+
+function setNextClub()
+    player:getNextClub()
+    course:setShotPower(player:getClub():getDistance())
+    powerSelector:refresh()
+end
+
+
+
+
+
+
+function getNumber()
+    return 0
 end

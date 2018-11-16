@@ -92,9 +92,17 @@ function Course:loadComplete()
     self.ball:setPixelScale(self.pixelsPerYard)
 end
 
+function Course:getShotPower()
+    return self.shotPower
+end
+
 function Course:setShotPower(shotPower)
     self.shotPower = shotPower
     self:calculateTarget()
+end
+
+function Course:changeShotPower(powerDifference)
+    self.setShotPower(self.shotPower + powerDifference)
 end
 
 function Course:hitBall()

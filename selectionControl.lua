@@ -42,6 +42,11 @@ function SelectionControl:mouseReleased()
     self.greaterThanButton:mouseReleased()
 end
 
+function SelectionControl:refresh()
+    self.selectionValue:update(self.getSelection())
+    _updateButtonEnabledStates(self)
+end    
+
 _lessThan_Clicked = function(self)
     self.previousSelectExec()
     self.selectionValue:update(self.getSelection())
