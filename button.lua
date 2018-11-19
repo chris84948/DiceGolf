@@ -1,5 +1,7 @@
 Button = Object:extend()
 
+local _isMouseOver
+
 function Button:new(x, y, imageName, quadHeight, quadPos, clicked, repeatTime)
     self.x = x
     self.y = y
@@ -14,7 +16,7 @@ function Button:new(x, y, imageName, quadHeight, quadPos, clicked, repeatTime)
     self.disabledQuad = love.graphics.newQuad(0, quadHeight * (quadPos + 2), self.width, self.height, self.image:getWidth(), self.image:getHeight())
     self.isEnabled = true
     self.repeatTimeNow = 0
-    self.numRepeats = 3
+    self.numRepeats = 1
 end
 
 function Button:update(dt)
@@ -24,11 +26,11 @@ function Button:update(dt)
 
     self.repeatTimeNow = self.repeatTimeNow + dt
 
-    if self.repeatTimeNow > self.repeatTime * self.numRepeats then
+    if self.repeatTimeNow > self.repeatTime / self.numRepeats then
         self.clicked()
 
-        if self.numRepeats > 1 then
-            self.numRepeats = self.numRepeats - 0.5
+        if self.numRepeats < 15 then
+            self.numRepeats = self.numRepeats + 1
         end
         self.repeatTimeNow = 0
     end
@@ -47,20 +49,31 @@ end
 function Button:mousePressed(x, y)
     if self.mouseDown or not self.isEnabled then
         return
-    elseif x < self.x or x > self.x + self.width or y < self.y or y > self.y + self.height then
+    elseif not _isMouseOver(self, x, y) then
         return
     end
     
     self.mouseDown = true
-    self.clicked()
 end
 
-function Button:mouseReleased()
-   self.mouseDown = false 
-   self.numRepeats = 3
-   self.repeatTimeNow = 0
+function Button:mouseReleased(x, y)
+    if self.mouseDown and _isMouseOver(self, x, y) then
+        self.clicked()
+    end
+
+    self.mouseDown = false 
+    self.numRepeats = 1
+    self.repeatTimeNow = 0
 end
 
 function Button:setEnabled(isEnabled)
     self.isEnabled = isEnabled
+end
+
+_isMouseOver = function(self, x, y)
+    if x >= self.x and x <= self.x + self.width and y >= self.y and y <= self.y + self.height then
+        return true
+    else
+        return false
+    end
 end

@@ -1,19 +1,12 @@
 local CourseLoader = {}
 local _loadObjectLayer
 
-function CourseLoader:loadCourse(num, x, y)
-    local file = io.open("courses/course" .. num .. ".json")
-
-    if not file then
-        print('file not found')
-        return
-    end
-
-    local jsonString = file:read("*a")
-    file:close()
+function CourseLoader:loadCourse(num, x, y, shotComplete, courseComplete)
+    local filename = "courses/course" .. num .. ".json"
+    local jsonString, _ = love.filesystem.read(filename)
     local courseTable = Json.decode(jsonString)
 
-    local course = Course(x, y, courseTable.width, courseTable.height, courseTable.tileheight, courseTable.properties)
+    local course = Course(x, y, courseTable.width, courseTable.height, courseTable.tileheight, courseTable.properties, shotComplete, courseComplete)
     
     for i, layer in ipairs(courseTable.layers) do
         if string.upper(layer.name) == "TILE LAYER 1" then

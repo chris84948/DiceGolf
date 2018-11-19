@@ -10,17 +10,15 @@ function DiceHand:new(x, y, numDice, spacing, rollComplete)
     local image = love.graphics.newImage("assets/dice.png")
     
     local diceQuads = {}
-    for column = 0, 5 do
-        table.insert(diceQuads, love.graphics.newQuad(column * self.diceSize, 0, self.diceSize, self.diceSize, image:getWidth(), image:getHeight()))
-    end
-    local holdQuads = {}
-    for column = 0, 5 do
-        table.insert(holdQuads, love.graphics.newQuad(column * self.diceSize, self.diceSize, self.diceSize, self.diceSize, image:getWidth(), image:getHeight()))
+    for row = 0, 5 do
+        for column = 0, 2 do
+            table.insert(diceQuads, love.graphics.newQuad(column * self.diceSize, row * self.diceSize, self.diceSize, self.diceSize, image:getWidth(), image:getHeight()))
+        end
     end
 
     self.dice = {}
     for i = 1, numDice do
-        table.insert(self.dice, Dice(x + (i - 1) * (self.diceSize + spacing), y, self.diceSize, image, diceQuads, holdQuads))
+        table.insert(self.dice, Dice(x + (i - 1) * (self.diceSize + spacing), y, i, self.diceSize, image, diceQuads))
     end
 
     self.maxRolls = 3
@@ -54,6 +52,7 @@ end
 
 
 function DiceHand:roll()
+    self.score = 0
     if self.numRollsLeft <= 0 then
         for i, dice in ipairs(self.dice) do
             dice:clearHold()
@@ -74,9 +73,12 @@ function DiceHand:roll()
     self.numRollsLeft = self.numRollsLeft - 1
 end
 
-function DiceHand:newRoll()
+function DiceHand:reset()
     self.numRollsLeft = 0
-    self:roll()
+    for i, dice in ipairs(self.dice) do
+        dice:clearHold()
+        dice:disable()
+    end
 end
 
 function DiceHand:mousePressed(x, y)
@@ -91,12 +93,16 @@ function DiceHand:mousePressed(x, y)
     end
 end
 
-function DiceHand:mouseReleased()
+function DiceHand:mouseReleased(x, y)
     self.mouseDown = false
 end
 
 function DiceHand:getNumRollsLeft()
     return self.numRollsLeft
+end
+
+function DiceHand:getScore()
+    return self.score
 end
 
 _rollComplete = function(self)
@@ -111,7 +117,7 @@ _rollComplete = function(self)
     table.sort(diceValues)
 
     local score, description = _getScoreAsDecimal(diceValues, dicesTotal, self.numDice)
-    print(score, description)
+    self.score = score
     self.rollComplete(score, description)
 end
 
@@ -124,12 +130,12 @@ _getScoreAsDecimal = function(diceValues, dicesTotal, numDice)
         return 1.0, "Four Of A Kind"
     elseif _isLargeStraight(diceValues) then
         return 1.0, "A Large Straight"
+    elseif _isFullHouse(numMatches, numMatches2) then
+        return 0.9, "A Full House"
     elseif _isThreeOfAKind(numMatches) then
         return 0.9, "Three Of A Kind"
     elseif _isSmallStraight(diceValues) then
         return 0.9, "A Small Straight"
-    elseif _isFullHouse(numMatches, numMatches2) then
-        return 0.9, "A Full House"
     else
         return dicesTotal / (numDice * 6), "Some Dice"
     end

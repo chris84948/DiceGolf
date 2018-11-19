@@ -1,3 +1,5 @@
+local _setEnabledOnSelectors
+
 function initialize()
     love.window.setMode(1200, 800)
     love.graphics.setBackgroundColor(0.15, 0.15, 0.15)
@@ -27,12 +29,11 @@ end
 function love.load()
     initialize()
 
-    num = 0
+    courseNum = 1
     player = Player(clubChangedEvent)
     shotTable = ShotTable(20, 110)
-    shotTable:addHole(1, 4)
     fields = {
-        TextField(390, 25, "To Die Fore", 60, 0.5, 0),
+        TextField(390, 25, "I Dice Big Putts", 60, 0.5, 0),
         TextField(40, 220, "Hole 1", 28),
         TextField(160, 220, "Par 4", 28),
         TextField(370, 220, "Shot 1", 28),
@@ -42,24 +43,27 @@ function love.load()
         TextField(390, 630, "", 28, 0.5, 0),
     }
 
-    course = CourseLoader:loadCourse(1, 780, 20)
-    course:setShotPower(player:getClub():getDistance())
+    loadCourse(courseNum)
 
-    clubSelector = SelectionControl(20, 290, "Club", function() return player:getClub():getName() end, 
-                                                     setPreviousClub, setNextClub,
+    clubSelector = SelectionControl(20, 290, "Club", function() return player:getClub().name end, 
+                                                     function() player:getPreviousClub() end,
+                                                     function() player:getNextClub() end,
                                                      function() return player:canGetPreviousClub() end, 
                                                      function() return player:canGetNextClub() end)
     powerSelector = SelectionControl(275, 290, "Power", function() return course:getShotPower() end, 
-                                                        function() course:changeShotPower(-10) end, 
-                                                        function() course:changeShotPower(10) end, 
-                                                        function() return course:getShotPower() >= 10 end, 
-                                                        function() return course:getShotPower() <= player:getClub():getDistance() - 10 end)
-    angleSelector = SelectionControl(530, 290, "Angle", getNumber, function() course:changeShotAngle(-1) end, function() course:changeShotAngle(1) end)
+                                                        function() course:changeShotPower(-5) end, 
+                                                        function() course:changeShotPower(5) end, 
+                                                        function() return course:getShotPower() >= 5 end, 
+                                                        function() return course:getShotPower() <= player:getClub().distance - 5 end, 0.5)
+    angleSelector = SelectionControl(530, 290, "Angle", function() return Ext.round(course:getShotAngle(), 0) .. " deg" end, 
+                                                        function() course:changeShotAngle(-0.5) end, 
+                                                        function() course:changeShotAngle(0.5) end,
+                                                        nil, nil, 0.3)
 
-    diceButton = Button(140, 410, "buttons", 64, 0, diceButton_Clicked)
-    diceHand = DiceHand(90, 500, 5, 70, rollComplete)
+    diceButton = Button(140, 410, "buttons", 64, 0, diceButton_Clicked, diceButton_MouseReleased)
+    diceHand = DiceHand(150, 500, 5, 40, rollComplete)
 
-    spinner = Spinner(140, 674)
+    spinner = Spinner(140, 674, function() course:takeShot(diceHand:getScore(), spinner:stopRotationAndGetError(), player:isPutterSelected()) end)
 end
 
 function love.update(dt)
@@ -107,20 +111,33 @@ end
 
 function love.mousereleased(x, y, button, istouch, presses)
     if button == 1 then
-        powerSelector:mouseReleased()
-        clubSelector:mouseReleased()
-        angleSelector:mouseReleased()
-        diceHand:mouseReleased()
-        diceButton:mouseReleased()
-        spinner:mouseReleased()
+        powerSelector:mouseReleased(x, y)
+        clubSelector:mouseReleased(x, y)
+        angleSelector:mouseReleased(x, y)
+        diceHand:mouseReleased(x, y)
+        diceButton:mouseReleased(x, y)
+        spinner:mouseReleased(x, y)
     end
 end
 
+function diceButton_Clicked()
+    fields[Constants.field_rolls]:clear()
+    fields[Constants.field_rollResult]:clear()
+    _setEnabledOnSelectors(false)
+    diceButton:setEnabled(false)
+    
+    diceHand:roll()
+end
+
 function clubChangedEvent()
-    print("club changed motherfucker")
+    course:setShotPower(player:getClub().distance)
+    if powerSelector then
+        powerSelector:refresh()
+    end
 end
 
 function rollComplete(score, description)
+    diceButton:setEnabled(true)
     local numRollsLeft = diceHand:getNumRollsLeft()
     if numRollsLeft == 0 then
         fields[Constants.field_rolls]:update("No More Rolls Left")
@@ -134,29 +151,31 @@ function rollComplete(score, description)
     spinner:show()
 end
 
-function diceButton_Clicked()
+function shotComplete(distanceHit, distanceToPin)
+    _setEnabledOnSelectors(true)
+    diceHand:reset()
+    player:calculateClubForNextShot(distanceToPin)
+
+    spinner:hide()
     fields[Constants.field_rolls]:clear()
     fields[Constants.field_rollResult]:clear()
-    diceHand:roll()
+    fields[Constants.field_shot]:update("Shot " .. player:shotComplete())
+    fields[Constants.field_distance]:update(Ext.round(distanceToPin, 0) .. " Yards To Pin")
 end
 
-function setPreviousClub()
-    player:getPreviousClub()
-    course:setShotPower(player:getClub():getDistance())
-    powerSelector:refresh()
+function loadCourse(courseNum) 
+    course = CourseLoader:loadCourse(1, 780, 20, function(distance, distanceToPin) shotComplete(distance, distanceToPin) end, courseComplete)
+    course:setShotPower(player:calculateClubForNextShot(course.lengthInYards))
 end
 
-function setNextClub()
-    player:getNextClub()
-    course:setShotPower(player:getClub():getDistance())
-    powerSelector:refresh()
+function courseComplete()
+    shotTable:addHole(courseNum, player.shotNum)
+    courseNum = courseNum + 1
+    loadCourse(1)
 end
 
-
-
-
-
-
-function getNumber()
-    return 0
+_setEnabledOnSelectors = function(isEnabled)
+    clubSelector:setEnabled(isEnabled)
+    powerSelector:setEnabled(isEnabled)
+    angleSelector:setEnabled(isEnabled)
 end

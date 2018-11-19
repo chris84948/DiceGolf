@@ -55,3 +55,26 @@ function Player:canGetNextClub()
         return false
     end
 end
+
+function Player:calculateClubForNextShot(distanceToPin)
+    for i = 1, #self.clubs do
+        if self.clubs[i].distance < distanceToPin then
+            self.selectedClubIndex = i
+            self.clubChanged()
+            return self:getClub().distance
+        end
+    end
+
+    self.selectedClubIndex = #self.clubs
+    self.clubChanged()
+    return self:getClub().distance
+end
+
+function Player:shotComplete()
+    self.shotNum = self.shotNum + 1
+    return self.shotNum
+end
+
+function Player:isPutterSelected()
+    return self:getClub().name == "Putter"
+end

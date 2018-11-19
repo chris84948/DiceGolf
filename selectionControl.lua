@@ -2,7 +2,7 @@ SelectionControl = Object:extend()
 
 local _lessThan_Clicked, _greaterThan_Clicked, _updateButtonEnabledStates
 
-function SelectionControl:new(x, y, title, getSelection, previousSelectExec, nextSelectExec, canPreviousSelectExec, canNextSelectExec)
+function SelectionControl:new(x, y, title, getSelection, previousSelectExec, nextSelectExec, canPreviousSelectExec, canNextSelectExec, repeatSpeed)
     self.x = x
     self.y = y
     self.getSelection = getSelection
@@ -10,12 +10,13 @@ function SelectionControl:new(x, y, title, getSelection, previousSelectExec, nex
     self.nextSelectExec = nextSelectExec
     self.canPreviousSelectExec = canPreviousSelectExec
     self.canNextSelectExec = canNextSelectExec
+    self.repeatSpeed = repeatSpeed or 0.5
 
     self.title = TextField(self.x + 115, self.y, title,  28, 0.5, 0)
     self.selectionValue = TextField(self.x + 115, self.y + 40, getSelection(), 28, 0.5, 0)
 
-    self.lessThanButton = Button(self.x, self.y + 30, "arrows", 41, 0, function() _lessThan_Clicked(self) end, 0.1)
-    self.greaterThanButton = Button(self.x + 189, self.y + 30, "arrows", 41, 3, function() _greaterThan_Clicked(self) end, 0.1)
+    self.lessThanButton = Button(self.x, self.y + 30, "arrows", 41, 0, function() _lessThan_Clicked(self) end, self.repeatSpeed)
+    self.greaterThanButton = Button(self.x + 189, self.y + 30, "arrows", 41, 3, function() _greaterThan_Clicked(self) end, self.repeatSpeed)
 
     _updateButtonEnabledStates(self)
 end
@@ -37,15 +38,20 @@ function SelectionControl:mousePressed(x, y)
     self.greaterThanButton:mousePressed(x, y)
 end
 
-function SelectionControl:mouseReleased()
-    self.lessThanButton:mouseReleased()
-    self.greaterThanButton:mouseReleased()
+function SelectionControl:mouseReleased(x, y)
+    self.lessThanButton:mouseReleased(x, y)
+    self.greaterThanButton:mouseReleased(x, y)
 end
 
 function SelectionControl:refresh()
     self.selectionValue:update(self.getSelection())
     _updateButtonEnabledStates(self)
-end    
+end
+
+function SelectionControl:setEnabled(isEnabled)
+    self.lessThanButton:setEnabled(isEnabled)
+    self.greaterThanButton:setEnabled(isEnabled)
+end
 
 _lessThan_Clicked = function(self)
     self.previousSelectExec()
