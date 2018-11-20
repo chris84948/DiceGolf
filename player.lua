@@ -1,5 +1,7 @@
 Player = Object:extend()
 
+local _selectClub
+
 function Player:new(clubChanged)
     self.clubChanged = clubChanged
     
@@ -56,18 +58,18 @@ function Player:canGetNextClub()
     end
 end
 
-function Player:calculateClubForNextShot(distanceToPin)
-    for i = 1, #self.clubs do
+function Player:calculateClubForNextShot(distanceToPin, isOnGreen)
+    if isOnGreen then
+        return _selectClub(self, #self.clubs)
+    end
+
+    for i = 1, #self.clubs - 1 do
         if self.clubs[i].distance < distanceToPin then
-            self.selectedClubIndex = i
-            self.clubChanged()
-            return self:getClub().distance
+            return _selectClub(self, i)
         end
     end
 
-    self.selectedClubIndex = #self.clubs
-    self.clubChanged()
-    return self:getClub().distance
+    return _selectClub(self, #self.clubs - 1)
 end
 
 function Player:shotComplete()
@@ -77,4 +79,10 @@ end
 
 function Player:isPutterSelected()
     return self:getClub().name == "Putter"
+end
+
+_selectClub = function(self, clubIndex)
+    self.selectedClubIndex = clubIndex
+    self.clubChanged()
+    return self:getClub().distance
 end

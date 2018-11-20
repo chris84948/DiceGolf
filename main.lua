@@ -34,10 +34,10 @@ function love.load()
     shotTable = ShotTable(20, 110)
     fields = {
         TextField(390, 25, "I Dice Big Putts", 60, 0.5, 0),
-        TextField(40, 220, "Hole 1", 28),
-        TextField(160, 220, "Par 4", 28),
-        TextField(370, 220, "Shot 1", 28),
-        TextField(500, 220, "376 Yards To Pin", 28),
+        TextField(40, 220, "Hole Num", 28),
+        TextField(160, 220, "Par Num", 28),
+        TextField(370, 220, "Shot Num", 28),
+        TextField(500, 220, "Distance To Pin", 28),
         TextField(390, 445, "ROLL DICE", 28, 0.5, 0.5, {0.15, 0.15, 0.15, 1}),
         TextField(390, 590, "", 22, 0.5, 0),
         TextField(390, 630, "", 28, 0.5, 0),
@@ -45,12 +45,12 @@ function love.load()
 
     loadCourse(courseNum)
 
-    clubSelector = SelectionControl(20, 290, "Club", function() return player:getClub().name end, 
+    clubSelector = SelectionControl(50, 290, "Club", function() return player:getClub().name end, 
                                                      function() player:getPreviousClub() end,
                                                      function() player:getNextClub() end,
                                                      function() return player:canGetPreviousClub() end, 
                                                      function() return player:canGetNextClub() end)
-    powerSelector = SelectionControl(275, 290, "Power", function() return course:getShotPower() end, 
+    powerSelector = SelectionControl(290, 290, "Power", function() return course:getShotPower() end, 
                                                         function() course:changeShotPower(-5) end, 
                                                         function() course:changeShotPower(5) end, 
                                                         function() return course:getShotPower() >= 5 end, 
@@ -60,10 +60,10 @@ function love.load()
                                                         function() course:changeShotAngle(0.5) end,
                                                         nil, nil, 0.3)
 
-    diceButton = Button(140, 410, "buttons", 64, 0, diceButton_Clicked, diceButton_MouseReleased)
+    diceButton = Button(140, 410, "buttons", 64, 0, diceButton_Clicked, diceButton_MouseReleased, true)
     diceHand = DiceHand(150, 500, 5, 40, rollComplete)
 
-    spinner = Spinner(140, 674, function() course:takeShot(diceHand:getScore(), spinner:stopRotationAndGetError(), player:isPutterSelected()) end)
+    spinner = Spinner(140, 674, function() course:takeShot(diceHand.score, spinner:stopRotationAndGetError(), player:isPutterSelected()) end)
 end
 
 function love.update(dt)
@@ -131,20 +131,23 @@ end
 
 function clubChangedEvent()
     course:setShotPower(player:getClub().distance)
-    if powerSelector then
+    if powerSelector and clubSelector then
         powerSelector:refresh()
+        clubSelector:refresh()
     end
 end
 
 function rollComplete(score, description)
-    diceButton:setEnabled(true)
-    local numRollsLeft = diceHand:getNumRollsLeft()
-    if numRollsLeft == 0 then
+    if diceHand.numRollsLeft > 0 then
+        diceButton:setEnabled(true)
+    end
+
+    if diceHand.numRollsLeft == 0 then
         fields[Constants.field_rolls]:update("No More Rolls Left")
-    elseif numRollsLeft == 1 then
-        fields[Constants.field_rolls]:update(numRollsLeft .. " Roll Left - Click Dice To Hold")
+    elseif diceHand.numRollsLeft == 1 then
+        fields[Constants.field_rolls]:update(diceHand.numRollsLeft .. " Roll Left - Click Dice To Hold")
     else
-        fields[Constants.field_rolls]:update(numRollsLeft .. " Rolls Left - Click Dice To Hold")
+        fields[Constants.field_rolls]:update(diceHand.numRollsLeft .. " Rolls Left - Click Dice To Hold")
     end
 
     fields[Constants.field_rollResult]:update("You Rolled " .. description .. ", Hit = ".. Ext.round(score * 100, 2) .. "%")
@@ -154,7 +157,8 @@ end
 function shotComplete(distanceHit, distanceToPin)
     _setEnabledOnSelectors(true)
     diceHand:reset()
-    player:calculateClubForNextShot(distanceToPin)
+    diceButton:setEnabled(true)
+    player:calculateClubForNextShot(distanceToPin, course:isOnGreen())
 
     spinner:hide()
     fields[Constants.field_rolls]:clear()
@@ -164,14 +168,24 @@ function shotComplete(distanceHit, distanceToPin)
 end
 
 function loadCourse(courseNum) 
-    course = CourseLoader:loadCourse(1, 780, 20, function(distance, distanceToPin) shotComplete(distance, distanceToPin) end, courseComplete)
-    course:setShotPower(player:calculateClubForNextShot(course.lengthInYards))
+    course = CourseLoader:loadCourse(courseNum, 780, 20, function(distance, distanceToPin) shotComplete(distance, distanceToPin) end, courseComplete)
+    course:setShotPower(player:calculateClubForNextShot(course.lengthInYards, false))
+
+    fields[Constants.field_distance]:update(Ext.round(course.lengthInYards, 0) .. " Yards To Pin")
+    fields[Constants.field_shot]:update("Shot " .. player.shotNum)
+
+    fields[Constants.field_hole]:update("Hole " .. course.hole)
+    fields[Constants.field_par]:update("Par " .. course.par)
 end
 
 function courseComplete()
+    shotComplete(0, 0)
+
     shotTable:addHole(courseNum, player.shotNum)
+    player.shotNum = 1
+
     courseNum = courseNum + 1
-    loadCourse(1)
+    loadCourse(courseNum)    
 end
 
 _setEnabledOnSelectors = function(isEnabled)

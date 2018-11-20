@@ -12,11 +12,11 @@ function SelectionControl:new(x, y, title, getSelection, previousSelectExec, nex
     self.canNextSelectExec = canNextSelectExec
     self.repeatSpeed = repeatSpeed or 0.5
 
-    self.title = TextField(self.x + 115, self.y, title,  28, 0.5, 0)
-    self.selectionValue = TextField(self.x + 115, self.y + 40, getSelection(), 28, 0.5, 0)
+    self.title = TextField(self.x + 105, self.y, title,  28, 0.5, 0)
+    self.selectionValue = TextField(self.x + 105, self.y + 40, getSelection(), 28, 0.5, 0)
 
     self.lessThanButton = Button(self.x, self.y + 30, "arrows", 41, 0, function() _lessThan_Clicked(self) end, self.repeatSpeed)
-    self.greaterThanButton = Button(self.x + 189, self.y + 30, "arrows", 41, 3, function() _greaterThan_Clicked(self) end, self.repeatSpeed)
+    self.greaterThanButton = Button(self.x + 169, self.y + 30, "arrows", 41, 3, function() _greaterThan_Clicked(self) end, self.repeatSpeed)
 
     _updateButtonEnabledStates(self)
 end

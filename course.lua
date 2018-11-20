@@ -1,8 +1,9 @@
 Course = Object:extend()
 
-function Course:new(x, y, width, height, tileSize, customProps, shotCompleteExec, courseCompleteExec)
+function Course:new(x, y, hole, width, height, tileSize, customProps, shotCompleteExec, courseCompleteExec)
     self.x = x
     self.y = y
+    self.hole = hole
     self.tileWidth = width
     self.tileHeight = height
     self.tileSize = tileSize
@@ -120,11 +121,11 @@ end
 
 function Course:calculateTarget()
     local diffX = self.holeX - self.ball.x
-    local diffY = math.abs(self.holeY - self.ball.y)
+    local diffY = self.holeY - self.ball.y
     
     self.distanceToPin = math.sqrt(diffX ^ 2 + diffY ^ 2)
     self.shotPowerInPixels = self.pixelsPerYard * self.shotPower
-    self.angle = math.atan2(diffY, diffX) + self.angleOffset
+    self.angle = math.atan2(-diffY, diffX) + self.angleOffset
 
     local targetX = self.ball.x + self.shotPowerInPixels * math.cos(self.angle)
     local targetY = self.ball.y - self.shotPowerInPixels * math.sin(self.angle)
@@ -140,6 +141,16 @@ function Course:getCourseType(x, y)
     local courseTileY = math.ceil(y / self.tileSize)
 
     return self.tiles[(courseTileY - 1) * self.tileWidth + courseTileX]:getCourseType()
+end
+
+function Course:isOnGreen()
+    local courseType = self:getCourseType(self.ball:getRelativeXY())
+
+    if courseType == Constants.course_green then
+        return true
+    else
+        return false
+    end
 end
 
 function Course:shotComplete(distance)

@@ -32,11 +32,11 @@ function Ball:update(dt)
             self.ballRadiusChanger = math.sin((1 - (math.abs(self.moveTimeHalf - self.moveTime) / self.moveTimeHalf)) * math.pi / 2)
         end
     elseif self.moveTime <= 0 and (self.speedX ~= 0 or self.speedY ~= 0) and self.bounces == 0 then
-        _calculateBounce(self, self.courseRef:getCourseType(self.x, self.y))
+        _calculateBounce(self, self.courseRef:getCourseType(self:getRelativeXY()))
     elseif math.abs(self.speedX) < 1 and math.abs(self.speedY) < 1 then
         _shotComplete(self)
     elseif self.moveTime < 0 then
-        local courseType = self.courseRef:getCourseType(self.x - self.courseRef.x, self.y - self.courseRef.y)
+        local courseType = self.courseRef:getCourseType(self:getRelativeXY())
         _calculateRoll(self, courseType)
     end
 
@@ -50,6 +50,10 @@ function Ball:draw()
     love.graphics.circle("fill", self.x, self.y, self.radius + self.ballRadiusChanger * self.ballRadiusIncrease)
 end
 
+
+function Ball:getRelativeXY()
+    return self.x - self.courseRef.x, self.y - self.courseRef.y
+end
 
 function Ball:setPixelScale(pixelsPerYard)
     self.pixelsPerYard = pixelsPerYard

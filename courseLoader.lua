@@ -2,11 +2,11 @@ local CourseLoader = {}
 local _loadObjectLayer
 
 function CourseLoader:loadCourse(num, x, y, shotComplete, courseComplete)
-    local filename = "courses/course" .. num .. ".json"
+    local filename = "courses/course" .. 1 .. ".json"
     local jsonString, _ = love.filesystem.read(filename)
     local courseTable = Json.decode(jsonString)
 
-    local course = Course(x, y, courseTable.width, courseTable.height, courseTable.tileheight, courseTable.properties, shotComplete, courseComplete)
+    local course = Course(x, y, num, courseTable.width, courseTable.height, courseTable.tileheight, courseTable.properties, shotComplete, courseComplete)
     
     for i, layer in ipairs(courseTable.layers) do
         if string.upper(layer.name) == "TILE LAYER 1" then

@@ -2,12 +2,13 @@ Button = Object:extend()
 
 local _isMouseOver
 
-function Button:new(x, y, imageName, quadHeight, quadPos, clicked, repeatTime)
+function Button:new(x, y, imageName, quadHeight, quadPos, clicked, repeatTime, clickOnMouseUp)
     self.x = x
     self.y = y
     self.image = love.graphics.newImage("assets/" .. imageName .. ".png")
     self.clicked = clicked
     self.repeatTime = repeatTime or 0
+    self.clickOnMouseUp = clickOnMouseUp or false
     
     self.height = quadHeight
     self.width = self.image:getWidth()
@@ -54,10 +55,13 @@ function Button:mousePressed(x, y)
     end
     
     self.mouseDown = true
+    if not self.clickOnMouseUp then
+        self.clicked()
+    end
 end
 
 function Button:mouseReleased(x, y)
-    if self.mouseDown and _isMouseOver(self, x, y) then
+    if self.clickOnMouseUp and self.mouseDown and _isMouseOver(self, x, y) then
         self.clicked()
     end
 

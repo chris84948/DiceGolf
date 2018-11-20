@@ -8,11 +8,11 @@ function Spinner:new(x, y, takeShotClicked)
     self.height = self.image:getHeight()
 
     self.shotButton = Button(self.x, self.y + 16, "buttons", 64, 3, takeShotClicked)
-    self.buttonText = TextField(self.x + 200, self.y + 51, "TAKE SHOT", 28, 0.5, 0.5, {0.15, 0.15, 0.15, 1})
+    self.buttonText = TextField(self.x + 180, self.y + 51, "TAKE SWING", 28, 0.5, 0.5, {0.15, 0.15, 0.15, 1})
 
     self.rotation = 0
     self.isRotating = true
-    self.rotateSpeed = 1  -- rots/sec
+    self.rotateSpeed = 0.8  -- rots/sec
     self.scale = 1
 end
 
@@ -58,16 +58,19 @@ function Spinner:stopRotationAndGetError()
     self.isRotating = false
     local rotInDegrees = self.rotation * (180 / math.pi)
 
-    if rotInDegrees >= 253 and rotInDegrees <= 290 then
+    if rotInDegrees >= 92 and rotInDegrees <= 208 then
+        return -(math.random() * 20 + 20) * (math.pi / 180)
+    elseif rotInDegrees >= 209 and rotInDegrees <= 252 then
+        return -(math.random() * 10 + 10) * (math.pi / 180)
+    elseif rotInDegrees >= 253 and rotInDegrees <= 268 then
+        return -(math.random() * 5 + 2) * (math.pi / 180)
+    elseif rotInDegrees >= 269 and rotInDegrees <= 275 then
         return 0
-    end
-
-    -- Returns -1 or 1
-    local direction = (math.random(1, 2) * 2) -3
-
-    if (rotInDegrees >= 209 and rotInDegrees <= 252) or (rotInDegrees >= 291 and rotInDegrees <= 335) then
-        return ((math.random() * 3 + 2) * direction) * (math.pi / 180)
-    else
-        return ((math.random() * 5 + 5) * direction) * (math.pi / 180)
+    elseif rotInDegrees >= 276 and rotInDegrees <= 290 then
+        return (math.random() * 5 + 2) * (math.pi / 180)
+    elseif rotInDegrees >= 291 and rotInDegrees <= 335 then
+        return (math.random() * 10 + 10) * (math.pi / 180)
+    else -- final segment 336 - 91
+        return (math.random() * 20 + 20) * (math.pi / 180)
     end
 end

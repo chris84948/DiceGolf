@@ -97,14 +97,6 @@ function DiceHand:mouseReleased(x, y)
     self.mouseDown = false
 end
 
-function DiceHand:getNumRollsLeft()
-    return self.numRollsLeft
-end
-
-function DiceHand:getScore()
-    return self.score
-end
-
 _rollComplete = function(self)
     local diceValues = {}
     local dicesTotal = 0
@@ -137,7 +129,7 @@ _getScoreAsDecimal = function(diceValues, dicesTotal, numDice)
     elseif _isSmallStraight(diceValues) then
         return 0.9, "A Small Straight"
     else
-        return dicesTotal / (numDice * 6), "Some Dice"
+        return ((dicesTotal / numDice) / (6 * numDice)) * 3, "Some Dice"
     end
 end
 
