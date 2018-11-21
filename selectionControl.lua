@@ -18,6 +18,7 @@ function SelectionControl:new(x, y, title, getSelection, previousSelectExec, nex
     self.lessThanButton = Button(self.x, self.y + 30, "arrows", 41, 0, function() _lessThan_Clicked(self) end, self.repeatSpeed)
     self.greaterThanButton = Button(self.x + 169, self.y + 30, "arrows", 41, 3, function() _greaterThan_Clicked(self) end, self.repeatSpeed)
 
+    self.getSelection()
     _updateButtonEnabledStates(self)
 end
 

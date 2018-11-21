@@ -24,6 +24,7 @@ function Dice:update(dt, updateCounter)
             self.numberForRolling = self.numberForRolling % 6 + 1
         end
     elseif self.isRolling then
+        self.number = math.random(1, 6)
         self.isRolling = false
     end
 end
@@ -45,8 +46,6 @@ function Dice:roll(delay)
     self.isDisabled = false
     self.isRolling = true
     self.rollCountdown = delay
-
-    self.number = math.random(1, 6)
 end
 
 function Dice:getValue()
@@ -58,7 +57,9 @@ function Dice:isDiceHeld()
 end
 
 function Dice:toggleHold()
-    self.isHeld = not self.isHeld
+    if not self.isRolling and self.isDisabled then
+        self.isHeld = not self.isHeld
+    end
 end
 
 function Dice:clearHold()

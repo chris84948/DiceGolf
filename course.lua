@@ -20,6 +20,8 @@ function Course:new(x, y, hole, width, height, tileSize, customProps, shotComple
     self.takingShot = false
     self.angleOffset = 0
     self.isComplete = false
+    self.angleOffset = 0
+    self.angleOffsetTemp = 0
 
     self.quads = {}
 
@@ -52,7 +54,7 @@ function Course:draw()
     end
 
     if not self.takingShot then
-        love.graphics.line(self.ball.x, self.ball.y, self.targetX, self.targetY)
+        love.graphics.line(self.ball:getPixelX(), self.ball:getPixelY(), self.targetX + self.x, self.targetY + self.y)
     end
 end
 
@@ -81,15 +83,15 @@ function Course:setTileObjectData(tiles)
 end
 
 function Course:setTee(x, y)
-    self.teeX = self.x + x
-    self.teeY = self.y + y
+    self.teeX = x
+    self.teeY = y
 
     self.ball = Ball(self.teeX, self.teeY, self)
 end
 
 function Course:setHole(x, y)
-    self.holeX = self.x + x
-    self.holeY = self.y + y
+    self.holeX = x
+    self.holeY = y
 end
 
 function Course:getHole()
@@ -99,6 +101,7 @@ end
 function Course:loadComplete()
     self.pixelsPerYard = math.sqrt((self.teeX - self.holeX) ^ 2 + (self.teeY - self.holeY) ^ 2) / self.lengthInYards
     self.ball:setPixelScale(self.pixelsPerYard)
+    self:calculateTarget()
 end
 
 function Course:getShotPower()
@@ -110,13 +113,9 @@ function Course:setShotPower(shotPower)
     self:calculateTarget()
 end
 
-function Course:changeShotPower(powerDifference)
-    self.setShotPower(self.shotPower + powerDifference)
-end
-
-function Course:takeShot(powerMultiplier, errorAngle, isPutt)
+function Course:takeShot(powerMultiplier, errorAngle, windSpeed, isPutt)
     self.takingShot = true
-    self.ball:hit(self.shotPowerInPixels * powerMultiplier, self.angle + errorAngle, isPutt)
+    self.ball:hit(self.shotPowerInPixels * powerMultiplier, self.angle + errorAngle, windSpeed, isPutt)
 end
 
 function Course:calculateTarget()
@@ -124,13 +123,15 @@ function Course:calculateTarget()
     local diffY = self.holeY - self.ball.y
     
     self.distanceToPin = math.sqrt(diffX ^ 2 + diffY ^ 2)
-    self.shotPowerInPixels = self.pixelsPerYard * self.shotPower
-    self.angle = math.atan2(-diffY, diffX) + self.angleOffset
-
-    local targetX = self.ball.x + self.shotPowerInPixels * math.cos(self.angle)
-    local targetY = self.ball.y - self.shotPowerInPixels * math.sin(self.angle)
-
-    if targetX >= 0 and targetX <= (self.x + self.width) and targetY >= 0 and targetY <= (self.y + self.height) then
+    self.shotPowerInPixels = self.pixelsPerYard * (self.shotPower or 100)
+    
+    local angle = math.atan2(-diffY, diffX) + self.angleOffsetTemp
+    local targetX = self.ball.x + self.shotPowerInPixels * math.cos(angle)
+    local targetY = self.ball.y - self.shotPowerInPixels * math.sin(angle)
+    
+    if targetX >= 0 and targetX <= self.width and targetY >= 0 and targetY <= self.height then
+        self.angle = angle
+        self.angleOffset = self.angleOffsetTemp
         self.targetX = targetX
         self.targetY = targetY
     end
@@ -144,7 +145,7 @@ function Course:getCourseType(x, y)
 end
 
 function Course:isOnGreen()
-    local courseType = self:getCourseType(self.ball:getRelativeXY())
+    local courseType = self:getCourseType(self.ball.x, self.ball.y)
 
     if courseType == Constants.course_green then
         return true
@@ -155,8 +156,9 @@ end
 
 function Course:shotComplete(distance)
     self.angleOffset = 0
+    self.angleOffsetTemp = 0
     self.takingShot = false
-    self:calculateTarget(self)
+    self:calculateTarget(angleOffset)
     self.shotCompleteExec(distance, self.distanceToPin / self.pixelsPerYard)
 end
 
@@ -165,7 +167,7 @@ function Course:getShotAngle()
 end
 
 function Course:changeShotAngle(angleChange)
-    self.angleOffset = self.angleOffset - (angleChange * (math.pi / 180))
+    self.angleOffsetTemp = self.angleOffset - (angleChange * (math.pi / 180))
     self:calculateTarget()
 end
 

@@ -18,7 +18,7 @@ function Player:new(clubChanged)
         Club(120, "9-Iron"),
         Club(110, "Pitch W"),
         Club(90, "Sand W"),
-        Club(30, "Putter"),
+        Club(60, "Putter"),
     }
     self.selectedClubIndex = 1
 
