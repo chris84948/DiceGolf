@@ -49,7 +49,6 @@ function Ball:update(dt)
 
     -- ROLL
     elseif self.moveTime < 0 then
-        print("rolling", self.x, self.y)
         local courseType = self.courseRef:getCourseType(self.x, self.y)
         _calculateRoll(self, courseType, dt)
     end
@@ -155,7 +154,6 @@ _calculateRoll = function(self, courseTypeID, dt)
     if courseTypeID == Constants.course_green then
         self.speedX = self.speedX - 0.5 * dt * self.hitSpeedX
         self.speedY = self.speedY - 0.5 * dt * self.hitSpeedY
-        print(self.speedX, self.speedY)
     elseif courseTypeID == Constants.course_fairway then
         self.speedX = self.speedX - dt * self.hitSpeedX
         self.speedY = self.speedY - dt * self.hitSpeedY
