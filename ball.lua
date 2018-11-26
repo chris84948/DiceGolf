@@ -1,6 +1,6 @@
 Ball = Object:extend()
 
-local _shotComplete, _calculateBounce, _calculateRoll, _getTarget, _checkForHole, _getMinMoveTime
+local _shotComplete, _calculateBounce, _calculateRoll, _getTarget, _checkForHole, _getMinMoveTime, _isOutOfBounds
 
 function Ball:new(x, y, courseRef)
     self.courseX = courseRef.x
@@ -18,6 +18,9 @@ function Ball:new(x, y, courseRef)
     self.ballRadiusChanger = 0
     self.ballRadiusIncreaseDefault = 5
     self.ballRadiusIncrease = 0
+
+    self.previousX = 0
+    self.previousY = 0
 
     self.roll_Green = 0.96
     self.roll_Fairway = 0.93
@@ -45,12 +48,16 @@ function Ball:update(dt)
 
     -- SHOT COMPLETE
     elseif math.abs(self.speedX) < 1 and math.abs(self.speedY) < 1 then
-        _shotComplete(self)
+        _shotComplete(self, false)
 
     -- ROLL
     elseif self.moveTime < 0 then
-        local courseType = self.courseRef:getCourseType(self.x, self.y)
-        _calculateRoll(self, courseType, dt)
+        _calculateRoll(self, self.courseRef:getCourseType(self.x, self.y), dt)
+    end
+
+
+    if _isOutOfBounds(self) then
+        _shotComplete(self, true)
     end
 
     self.x = self.x + self.speedX * dt
@@ -118,13 +125,21 @@ _getMinMoveTime = function(self, distance)
     end
 end
 
-_shotComplete = function(self)
+_shotComplete = function(self, isOutOfBounds)
     self.speedX = 0
     self.speedY = 0
     self.moveTimeHalf = 0
+    self.ballRadiusChanger = 0
     
-    self.shotDistance = math.sqrt((self.x - self.startX) ^ 2 + (self.y - self.startY) ^ 2) / self.pixelsPerYard
-    self.courseRef:shotComplete(self.shotDistance)
+    if isOutOfBounds then
+        self.x = self.startX
+        self.y = self.startY
+        self.shotDistance = 0
+    else
+        self.shotDistance = math.sqrt((self.x - self.startX) ^ 2 + (self.y - self.startY) ^ 2) / self.pixelsPerYard
+    end
+
+    self.courseRef:shotComplete(self.shotDistance, isOutOfBounds)
 end
 
 _calculateBounce = function(self, courseTypeID)
@@ -182,5 +197,13 @@ _checkForHole = function(self)
         self.speedY = -self.speedY * 0.5
         self.hitSpeedX = self.speedX
         self.hitSpeedY = self.speedY
+    end
+end
+
+_isOutOfBounds = function(self)
+    if self.x < 0 or self.x > self.courseRef.width or self.y < 0 or self.y > self.courseRef.height then
+        return true
+    else
+        return false
     end
 end

@@ -23,6 +23,12 @@ function Course:new(x, y, hole, width, height, tileSize, customProps, shotComple
     self.angleOffset = 0
     self.angleOffsetTemp = 0
 
+    self.outOfBoundsField = TextField(x + self.width * 0.5, y + self.height * 0.5, "OUT OF BOUNDS", 32, 0.5, 0.5, { 1, 1, 1, 1 }, { 1, 0, 0, 1})
+    self.showOutOfBounds = false
+    self.outOfBoundsTime = 3
+    self.outOfBoundsCur = 0
+    self.outOfBoundsShotComplete = nil
+
     self.quads = {}
 
     for i = 0, (self.tileImage:getWidth() / self.tileSize) - 1 do
@@ -38,6 +44,15 @@ end
 
 function Course:update(dt)
     self.ball:update(dt)
+
+    if self.showOutOfBounds then
+        if self.outOfBoundsCur < self.outOfBoundsTime then
+            self.outOfBoundsCur = self.outOfBoundsCur + dt
+        else
+            self.showOutOfBounds = false
+            self.shotCompleteExec(self.outOfBoundsShotCompleteParams[1], self.outOfBoundsShotCompleteParams[2], self.outOfBoundsShotCompleteParams[3])
+        end
+    end
 end
 
 function Course:draw()
@@ -49,12 +64,16 @@ function Course:draw()
         tile:draw()
     end
 
-    if not self.isComplete then
+    if not self.isComplete and not self.showOutOfBounds then
         self.ball:draw()
     end
 
-    if not self.takingShot then
+    if not self.takingShot and not self.showOutOfBounds then
         love.graphics.line(self.ball:getPixelX(), self.ball:getPixelY(), self.targetX + self.x, self.targetY + self.y)
+    end
+
+    if self.showOutOfBounds then
+        self.outOfBoundsField:draw()
     end
 end
 
@@ -122,7 +141,7 @@ function Course:calculateTarget()
     local diffX = self.holeX - self.ball.x
     local diffY = self.holeY - self.ball.y
     
-    self.distanceToPin = math.sqrt(diffX ^ 2 + diffY ^ 2)
+    self.distanceToPinInPixels = math.sqrt(diffX ^ 2 + diffY ^ 2)
     self.shotPowerInPixels = self.pixelsPerYard * (self.shotPower or 100)
     
     local angle = math.atan2(-diffY, diffX) + self.angleOffsetTemp
@@ -154,12 +173,23 @@ function Course:isOnGreen()
     end
 end
 
-function Course:shotComplete(distance)
+function Course:getDistanceToPin()
+    return self.distanceToPinInPixels / self.pixelsPerYard
+end
+
+function Course:shotComplete(distance, isOutOfBounds)
     self.angleOffset = 0
     self.angleOffsetTemp = 0
     self.takingShot = false
     self:calculateTarget(angleOffset)
-    self.shotCompleteExec(distance, self.distanceToPin / self.pixelsPerYard)
+
+    if isOutOfBounds then
+        -- Delay shot complete until warning is shown
+        self.outOfBoundsShotCompleteParams = { distance, self.distanceToPinInPixels / self.pixelsPerYard, isOutOfBounds }
+        self.showOutOfBounds = true
+    else
+        self.shotCompleteExec(distance, self.distanceToPinInPixels / self.pixelsPerYard, isOutOfBounds)
+    end
 end
 
 function Course:getShotAngle()

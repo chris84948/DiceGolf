@@ -57,7 +57,7 @@ function Dice:isDiceHeld()
 end
 
 function Dice:toggleHold()
-    if not self.isRolling and self.isDisabled then
+    if not self.isRolling and not self.isDisabled then
         self.isHeld = not self.isHeld
     end
 end

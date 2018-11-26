@@ -72,8 +72,13 @@ function Player:calculateClubForNextShot(distanceToPin, isOnGreen)
     return _selectClub(self, #self.clubs - 1)
 end
 
-function Player:shotComplete()
+function Player:shotComplete(isOutOfBounds)
     self.shotNum = self.shotNum + 1
+
+    if isOutOfBounds then
+        self.shotNum = self.shotNum + 1
+    end
+    
     return self.shotNum
 end
 

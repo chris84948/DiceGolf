@@ -7,12 +7,9 @@ function initialize()
     love.graphics.setColor(defaultTextColor)
     math.randomseed(os.time())
 
-    debug_TurnOffStrokeError = true
-    debug_TurnOffWindSpeed = true
-    debug_TurnOffDiceScore = true
-
     Object = require("libs.classic.classic")
     Constants = require("constants")
+    Debug = require("Debug")
     Json = require("libs.json.json")
     CourseLoader = require("courseLoader")
     Ext = require("ext")
@@ -39,17 +36,18 @@ function love.load()
     shotTable = ShotTable(20, 110)
     fields = {
         TextField(390, 25, "I Dice Big Putts", 60, 0.5, 0),
-        TextField(40, 220, "Hole Num", 28),
-        TextField(160, 220, "Par Num", 28),
         TextField(260, 220, "Shot Num", 28),
         TextField(380, 220, "Distance To Pin", 28),
         TextField(390, 445, "ROLL DICE", 28, 0.5, 0.5, {0.15, 0.15, 0.15, 1}),
-        TextField(390, 590, "", 22, 0.5, 0),
-        TextField(390, 630, "", 28, 0.5, 0),
+        TextField(390, 590, "", 22, 0.5, 0),    -- Num rolls left
+        TextField(390, 630, "", 28, 0.5, 0),    -- Roll result
+
+        TextField(980, 35, "Hole Num", 18, 0.5, 0),
+        TextField(980, 10, "Course Name", 18, 0.5, 0),
     }
 
     windFlag = WindFlag(650, 210)
-    --windFlag:setRandomWindSpeed()
+    windFlag:setRandomWindSpeed()
 
     loadCourse(courseNum)
 
@@ -101,6 +99,16 @@ function love.draw()
     course:draw()
 end
 
+function loadCourse(courseNum) 
+    course = CourseLoader:loadCourse(courseNum, 780, 60, shotComplete, courseComplete)
+    course:setShotPower(player:calculateClubForNextShot(course:getDistanceToPin(), false))
+
+    fields[Constants.field_distance]:update(Ext.round(course:getDistanceToPin(), 0) .. " Yards To Pin")
+    fields[Constants.field_shot]:update("Shot " .. player.shotNum)
+
+    fields[Constants.field_hole]:update("Hole " .. course.hole .. "   Par " .. course.par .. "   " .. course.lengthInYards .. " Yards")
+    fields[Constants.field_courseName]:update(Constants.courseNames[courseNum])
+end
 
 function love.keypressed(key)
     if key == "escape" then
@@ -141,9 +149,9 @@ end
 
 function spinnerButton_Clicked()
     diceButton:setEnabled(false)
-    course:takeShot((debug_TurnOffDiceScore and 1.0) or diceHand.score, 
-                    (debug_TurnOffStrokeError and 0) or spinner:stopRotationAndGetError(), 
-                    (debug_TurnOffWindSpeed and 0) or windFlag:getWindSpeed(), 
+    course:takeShot((Debug.TurnOffDiceScore and 1.0) or diceHand.score, 
+                    (Debug.TurnOffStrokeError and 0) or spinner:stopRotationAndGetError(), 
+                    (Debug.TurnOffWindSpeed and 0) or windFlag:getWindSpeed(), 
                     player:isPutterSelected())
 end
 
@@ -172,7 +180,7 @@ function rollComplete(score, description)
     spinner:show()
 end
 
-function shotComplete(distanceHit, distanceToPin)
+function shotComplete(distanceHit, distanceToPin, isOutOfBounds)
     _setEnabledOnSelectors(true)
     diceHand:reset()
     diceButton:setEnabled(true)
@@ -182,19 +190,9 @@ function shotComplete(distanceHit, distanceToPin)
     spinner:hide()
     fields[Constants.field_rolls]:clear()
     fields[Constants.field_rollResult]:clear()
-    fields[Constants.field_shot]:update("Shot " .. player:shotComplete())
+    fields[Constants.field_shot]:update("Shot " .. player:shotComplete(isOutOfBounds))
     fields[Constants.field_distance]:update(Ext.round(distanceToPin, 0) .. " Yards To Pin")
-end
-
-function loadCourse(courseNum) 
-    course = CourseLoader:loadCourse(courseNum, 780, 20, function(distance, distanceToPin) shotComplete(distance, distanceToPin) end, courseComplete)
-    course:setShotPower(player:calculateClubForNextShot(course.distanceToPin, false))
-
-    fields[Constants.field_distance]:update(Ext.round(course.distanceToPin, 0) .. " Yards To Pin")
-    fields[Constants.field_shot]:update("Shot " .. player.shotNum)
-
-    fields[Constants.field_hole]:update("Hole " .. course.hole)
-    fields[Constants.field_par]:update("Par " .. course.par)
+    windFlag:setRandomWindSpeed()
 end
 
 function courseComplete()

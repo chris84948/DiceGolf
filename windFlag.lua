@@ -16,7 +16,6 @@ function WindFlag:new(x, y)
     self.currentTime = 0
     self.scaleX = 1
     self.offsetX = 0
-    self:setRandomWindSpeed()
 end
 
 function WindFlag:update(dt)
