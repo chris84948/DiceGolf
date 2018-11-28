@@ -83,6 +83,12 @@ function Ball:setPixelScale(pixelsPerYard)
 end
 
 function Ball:hit(distance, angle, windSpeed, isPutt)
+    if isPutt then
+        soundEffect:playPutt()
+    else
+        soundEffect:playSwing()
+    end
+
     self.isPutt = isPutt
     self.windSpeed = windSpeed
 
@@ -103,8 +109,8 @@ function Ball:hit(distance, angle, windSpeed, isPutt)
     local finalX, finalY = _getTarget(self, distance, angle)
 
     if isPutt then
-        self.speedX = distance * math.cos(angle)
-        self.speedY = -distance * math.sin(angle)
+        self.speedX = distance + 5 * math.cos(angle)
+        self.speedY = -(distance + 5) * math.sin(angle)
     else
         self.speedX = (finalX - self.x) / self.moveTime
         self.speedY = (finalY - self.y) / self.moveTime
@@ -133,6 +139,7 @@ _shotComplete = function(self, status)
         self.y = self.startY
         self.shotDistance = 0
     elseif status == Constants.shotComplete_Water then
+        soundEffect:playSplash()
         _calculateWaterHazardPosition(self)
         self.shotDistance = 0
     else
@@ -155,7 +162,6 @@ _calculateWaterHazardPosition = function(self)
         self.x = self.x - self.speedX * 0.01
         self.y = self.y - self.speedY * 0.01
         numLoops = numLoops + 1
-        print(self.x, self.y, self.speedX * 0.01, self.speedY * 0.01)
     end
 
     self.y = self.y + 3

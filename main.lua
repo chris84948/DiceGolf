@@ -3,10 +3,9 @@ local _setEnabledOnSelectors, _refreshSelectors
 function initialize()
     love.window.setMode(1200, 800)
     love.graphics.setBackgroundColor(0.15, 0.15, 0.15)
-    defaultTextColor = {0.9, 0.9, 0.9, 1}
-    love.graphics.setColor(defaultTextColor)
+    love.window.setTitle("I Dice Big Putts")
     math.randomseed(os.time())
-
+    
     Object = require("libs.classic.classic")
     Constants = require("constants")
     Debug = require("Debug")
@@ -22,23 +21,40 @@ function initialize()
     require("button")
     require("textField")
     require("shotTable")
+    require("shotTableItem")
     require("selectionControl")
     require("player")
     require("club")
     require("windFlag")
     require("ballLie")
+    require("githubLink")
+    require("backgroundMusic")
+    require("soundEffect")
+
+    defaultTextColor = {0.9, 0.9, 0.9, 1}
+    greenColor = { 0.302, 0.761, 0.545, 1 }
+    redColor = { 0.761, 0.314, 0.302, 1 }
+    love.graphics.setColor(defaultTextColor)
+
+    backgroundMusic = BackgroundMusic()
+    soundEffect = SoundEffect()
 end
 
 function love.load()
     initialize()
-
+    
     courseNum = 1
+    
+    githubLink = GithubLink(10, 725)
     player = Player(clubChangedEvent)
-    shotTable = ShotTable(20, 110)
+    shotTable = ShotTable(20, 80)
+
+    spinner = Spinner(140, 674, spinnerButton_Clicked)
+
     fields = {
-        TextField(390, 25, "I Dice Big Putts", 60, 0.5, 0),
-        TextField(30, 220, "Shot Num", 28),
-        TextField(180, 220, "Distance To Pin", 28),
+        TextField(390, 25, "I Dice Big Putts", 40, 0.5, 0),
+        TextField(30, 235, "Shot Num", 28),
+        TextField(180, 235, "Distance To Pin", 28),
         TextField(390, 445, "ROLL DICE", 28, 0.5, 0.5, {0.15, 0.15, 0.15, 1}),
         TextField(390, 590, "", 22, 0.5, 0),    -- Num rolls left
         TextField(390, 630, "", 28, 0.5, 0),    -- Roll result
@@ -47,33 +63,32 @@ function love.load()
         TextField(980, 10, "Course Name", 18, 0.5, 0),
     }
 
-    ballLie = BallLie(500, 210)
-    windFlag = WindFlag(600, 210)
+    ballLie = BallLie(500, 225)
+    windFlag = WindFlag(600, 225)
 
     loadCourse(courseNum)
 
-    clubSelector = SelectionControl(50, 290, "Club", function() return player:getClub().name end, 
+    clubSelector = SelectionControl(50, 305, "Club", function() return player:getClub().name end, 
                                                      function() player:getPreviousClub() end,
                                                      function() player:getNextClub() end,
                                                      function() return player:canGetPreviousClub() end, 
                                                      function() return player:canGetNextClub() end)
-    powerSelector = SelectionControl(290, 290, "Power", function() return course:getShotPower() end, 
+    powerSelector = SelectionControl(290, 305, "Power", function() return course:getShotPower() end, 
                                                         function() course:changeShotPower(-5) end, 
                                                         function() course:changeShotPower(5) end, 
                                                         function() return course:getShotPower() >= 5 end, 
                                                         function() return course:getShotPower() <= player:getClub().distance - 5 end, 0.5)
-    angleSelector = SelectionControl(530, 290, "Angle", function() return Ext.round(course:getShotAngle(), 0) .. " deg" end, 
+    angleSelector = SelectionControl(530, 305, "Angle", function() return Ext.round(course:getShotAngle(), 0) .. " deg" end, 
                                                         function() course:changeShotAngle(-1) end, 
                                                         function() course:changeShotAngle(1) end,
                                                         nil, nil, 0.3)
 
     diceButton = Button(140, 410, "buttons", 64, 0, diceButton_Clicked, 0, true)
     diceHand = DiceHand(150, 500, 5, 40, rollComplete)
-
-    spinner = Spinner(140, 674, spinnerButton_Clicked)
 end
 
 function love.update(dt)
+    backgroundMusic:update(dt)
     windFlag:update(dt)
     diceHand:update(dt)
     powerSelector:update(dt)
@@ -84,6 +99,7 @@ function love.update(dt)
 end
 
 function love.draw()
+    githubLink:draw()
     shotTable:draw()
     ballLie:draw()
     windFlag:draw()
@@ -106,6 +122,7 @@ function loadCourse(courseNum)
     course:setShotPower(player:calculateClubForNextShot(course:getDistanceToPin(), false))
     windFlag:setRandomWindSpeed()
     ballLie:setOnTee()
+    spinner.isOnGreen = false
 
     fields[Constants.field_distance]:update(Ext.round(course:getDistanceToPin(), 0) .. " Yards To Pin")
     fields[Constants.field_shot]:update("Shot " .. player.shotNum)
@@ -122,6 +139,7 @@ end
 
 function love.mousepressed(x, y, button, istouch, presses)
     if button == 1 then
+        githubLink:mousePressed(x, y)
         powerSelector:mousePressed(x, y)
         clubSelector:mousePressed(x, y)
         angleSelector:mousePressed(x, y)
@@ -133,6 +151,7 @@ end
 
 function love.mousereleased(x, y, button, istouch, presses)
     if button == 1 then
+        githubLink:mouseReleased()
         powerSelector:mouseReleased(x, y)
         clubSelector:mouseReleased(x, y)
         angleSelector:mouseReleased(x, y)
@@ -148,6 +167,7 @@ function diceButton_Clicked()
     _setEnabledOnSelectors(false)
     diceButton:setEnabled(false)
     
+    soundEffect:startRolling()
     diceHand:roll()
 end
 
@@ -168,6 +188,7 @@ function clubChangedEvent()
 end
 
 function rollComplete(score, description)
+    soundEffect:stopRolling()
     if diceHand.numRollsLeft > 0 then
         diceButton:setEnabled(true)
     end
@@ -199,12 +220,13 @@ function shotComplete(distanceHit, distanceToPin, isOutOfBounds)
 
     windFlag:setRandomWindSpeed()
     ballLie:set(course:getCourseType())
+    spinner.isOnGreen = course:getCourseType() == Constants.course_green
 end
 
 function courseComplete()
     shotComplete(0, 0)
     
-    shotTable:addHole(courseNum, player.shotNum)
+    shotTable:addHole(courseNum, ShotTableItem(course.par, player.shotNum))
     player.shotNum = 1
     
     courseNum = courseNum + 1
@@ -212,6 +234,8 @@ function courseComplete()
 
     course:setShotPower(player:calculateClubForNextShot(course.lengthInYards, false))
     _refreshSelectors()
+
+    soundEffect:playHole()
 end
 
 _setEnabledOnSelectors = function(isEnabled)

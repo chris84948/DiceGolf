@@ -4,6 +4,7 @@ function Spinner:new(x, y, takeShotClicked)
     self.x = x
     self.y = y
     self.image = love.graphics.newImage("assets/spinner.png")
+    self.imageGreen = love.graphics.newImage("assets/spinner_putt.png")
     self.width = self.image:getWidth()
     self.height = self.image:getHeight()
 
@@ -14,6 +15,7 @@ function Spinner:new(x, y, takeShotClicked)
     self.isRotating = true
     self.rotateSpeed = 0.8  -- rots/sec
     self.scale = 1
+    self.isOnGreen = false
 end
 
 function Spinner:update(dt)
@@ -24,7 +26,11 @@ end
 
 function Spinner:draw()
     if self.isVisible then
-        love.graphics.draw(self.image, self.x + 400 + self.width / 2, self.y + self.height / 2, self.rotation, self.scale, self.scale, self.width / 2, self.height / 2)
+        if self.isOnGreen then
+            love.graphics.draw(self.imageGreen, self.x + 400 + self.width / 2, self.y + self.height / 2, self.rotation, self.scale, self.scale, self.width / 2, self.height / 2)
+        else
+            love.graphics.draw(self.image, self.x + 400 + self.width / 2, self.y + self.height / 2, self.rotation, self.scale, self.scale, self.width / 2, self.height / 2)
+        end
         self.shotButton:draw()
         self.buttonText:draw()
     end
@@ -57,20 +63,29 @@ end
 function Spinner:stopRotationAndGetError()
     self.isRotating = false
     local rotInDegrees = self.rotation * (180 / math.pi)
+    print(rotInDegrees)
 
-    if rotInDegrees >= 92 and rotInDegrees <= 208 then
-        return -(math.random() * 20 + 20) * (math.pi / 180)
-    elseif rotInDegrees >= 209 and rotInDegrees <= 252 then
-        return -(math.random() * 10 + 10) * (math.pi / 180)
-    elseif rotInDegrees >= 253 and rotInDegrees <= 268 then
-        return -(math.random() * 5 + 2) * (math.pi / 180)
-    elseif rotInDegrees >= 269 and rotInDegrees <= 275 then
-        return 0
-    elseif rotInDegrees >= 276 and rotInDegrees <= 290 then
-        return (math.random() * 5 + 2) * (math.pi / 180)
-    elseif rotInDegrees >= 291 and rotInDegrees <= 335 then
-        return (math.random() * 10 + 10) * (math.pi / 180)
-    else -- final segment 336 - 91
-        return (math.random() * 20 + 20) * (math.pi / 180)
+    if self.isOnGreen then
+        if rotInDegrees >= 209 and rotInDegrees <= 335 then
+            return 0
+        else
+            return -(math.random() * 5 + 2) * (math.pi / 180)
+        end
+    else
+        if rotInDegrees >= 92 and rotInDegrees < 209 then
+            return -(math.random() * 20 + 20) * (math.pi / 180)
+        elseif rotInDegrees >= 209 and rotInDegrees < 253 then
+            return -(math.random() * 10 + 10) * (math.pi / 180)
+        elseif rotInDegrees >= 253 and rotInDegrees < 269 then
+            return -(math.random() * 5 + 2) * (math.pi / 180)
+        elseif rotInDegrees >= 269 and rotInDegrees <= 275 then
+            return 0
+        elseif rotInDegrees > 275 and rotInDegrees <= 290 then
+            return (math.random() * 5 + 2) * (math.pi / 180)
+        elseif rotInDegrees > 290 and rotInDegrees <= 335 then
+            return (math.random() * 10 + 10) * (math.pi / 180)
+        else -- final segment 336 - 91
+            return (math.random() * 20 + 20) * (math.pi / 180)
+        end
     end
 end

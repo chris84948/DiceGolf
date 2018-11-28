@@ -25,7 +25,7 @@ function Course:new(x, y, hole, width, height, tileSize, customProps, shotComple
     self.angleOffset = 0
     self.angleOffsetTemp = 0
 
-    self.outOfBoundsField = TextField(x + self.width * 0.5, y + self.height * 0.5, "OUT OF BOUNDS", 32, 0.5, 0.5, { 1, 1, 1, 1 }, { 1, 0, 0, 1})
+    self.outOfBoundsField = TextField(x + self.width * 0.5, y + self.height * 0.5, "OUT OF BOUNDS", 32, 0.5, 0.5, defaultTextColor, redColor)
     self.showOutOfBounds = false
     self.outOfBoundsTime = 3
     self.outOfBoundsCur = 0
@@ -135,6 +135,7 @@ function Course:setShotPower(shotPower)
 end
 
 function Course:takeShot(powerMultiplier, errorAngle, windSpeed, isPutt)
+    print("takingShot", powerMultiplier, errorAngle, windSpeed)
     self.takingShot = true
     
     local courseType = self:getCourseType()
@@ -168,7 +169,7 @@ function Course:getCourseType()
     local courseTileX = math.ceil(self.ball.x / self.tileSize)
     local courseTileY = math.ceil(self.ball.y / self.tileSize)
 
-    return self.tiles[(courseTileY - 1) * self.tileWidth + courseTileX]:getCourseType()
+    return self.tiles[(courseTileY - 1) * self.tileWidth + courseTileX]:getCourseType() or 1
 end
 
 function Course:getDistanceToPin()
@@ -205,7 +206,6 @@ end
 
 function Course:changeShotAngle(angleChange)
     self.angleOffsetTemp = (self.angleOffset - (angleChange * (math.pi / 180))) % (math.pi * 2)
-    print("self.angleOffsetTemp = " .. self.angleOffsetTemp)
     self:calculateTarget()
 end
 
