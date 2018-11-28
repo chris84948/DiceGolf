@@ -26,6 +26,7 @@ function initialize()
     require("player")
     require("club")
     require("windFlag")
+    require("ballLie")
 end
 
 function love.load()
@@ -36,8 +37,8 @@ function love.load()
     shotTable = ShotTable(20, 110)
     fields = {
         TextField(390, 25, "I Dice Big Putts", 60, 0.5, 0),
-        TextField(260, 220, "Shot Num", 28),
-        TextField(380, 220, "Distance To Pin", 28),
+        TextField(30, 220, "Shot Num", 28),
+        TextField(180, 220, "Distance To Pin", 28),
         TextField(390, 445, "ROLL DICE", 28, 0.5, 0.5, {0.15, 0.15, 0.15, 1}),
         TextField(390, 590, "", 22, 0.5, 0),    -- Num rolls left
         TextField(390, 630, "", 28, 0.5, 0),    -- Roll result
@@ -46,8 +47,8 @@ function love.load()
         TextField(980, 10, "Course Name", 18, 0.5, 0),
     }
 
-    windFlag = WindFlag(650, 210)
-    windFlag:setRandomWindSpeed()
+    ballLie = BallLie(500, 210)
+    windFlag = WindFlag(600, 210)
 
     loadCourse(courseNum)
 
@@ -84,6 +85,7 @@ end
 
 function love.draw()
     shotTable:draw()
+    ballLie:draw()
     windFlag:draw()
     powerSelector:draw()
     clubSelector:draw()
@@ -102,6 +104,8 @@ end
 function loadCourse(courseNum) 
     course = CourseLoader:loadCourse(courseNum, 780, 60, shotComplete, courseComplete)
     course:setShotPower(player:calculateClubForNextShot(course:getDistanceToPin(), false))
+    windFlag:setRandomWindSpeed()
+    ballLie:setOnTee()
 
     fields[Constants.field_distance]:update(Ext.round(course:getDistanceToPin(), 0) .. " Yards To Pin")
     fields[Constants.field_shot]:update("Shot " .. player.shotNum)
@@ -184,7 +188,7 @@ function shotComplete(distanceHit, distanceToPin, isOutOfBounds)
     _setEnabledOnSelectors(true)
     diceHand:reset()
     diceButton:setEnabled(true)
-    player:calculateClubForNextShot(distanceToPin, course:isOnGreen())
+    player:calculateClubForNextShot(distanceToPin, course:getCourseType())
     angleSelector:refresh()
 
     spinner:hide()
@@ -192,7 +196,9 @@ function shotComplete(distanceHit, distanceToPin, isOutOfBounds)
     fields[Constants.field_rollResult]:clear()
     fields[Constants.field_shot]:update("Shot " .. player:shotComplete(isOutOfBounds))
     fields[Constants.field_distance]:update(Ext.round(distanceToPin, 0) .. " Yards To Pin")
+
     windFlag:setRandomWindSpeed()
+    ballLie:set(course:getCourseType())
 end
 
 function courseComplete()

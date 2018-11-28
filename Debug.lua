@@ -1,7 +1,7 @@
 local Debug = {}
 
-Debug.TurnOffStrokeError = false
-Debug.TurnOffWindSpeed = false
-Debug.TurnOffDiceScore = false 
+Debug.TurnOffStrokeError = true
+Debug.TurnOffWindSpeed = true
+Debug.TurnOffDiceScore = true 
 
 return Debug

@@ -28,4 +28,12 @@ Constants.courseNames = {
     "____"
 }
 
+Constants.shotComplete = 0
+Constants.shotComplete_OutOfBounds = 1
+Constants.shotComplete_Water = 2
+Constants.shotComplete_Messages = {
+    "OUT OF BOUNDS",
+    "WATER HAZARD"
+}
+
 return Constants

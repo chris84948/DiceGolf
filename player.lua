@@ -24,6 +24,7 @@ function Player:new(clubChanged)
 
     self.shotNum = 1
     self.shotsForEachCourse = {}
+    self.canChangeClub = true
 end
 
 function Player:getClub()
@@ -43,7 +44,7 @@ function Player:getNextClub()
 end
 
 function Player:canGetPreviousClub()
-    if self.selectedClubIndex > 1 then
+    if self.canChangeClub and self.selectedClubIndex > 1 then
         return true
     else
         return false
@@ -51,16 +52,22 @@ function Player:canGetPreviousClub()
 end
 
 function Player:canGetNextClub()
-    if self.selectedClubIndex < #self.clubs then
+    if self.canChangeClub and self.selectedClubIndex < #self.clubs then
         return true
     else
         return false
     end
 end
 
-function Player:calculateClubForNextShot(distanceToPin, isOnGreen)
-    if isOnGreen then
+function Player:calculateClubForNextShot(distanceToPin, courseType)
+    self.canChangeClub = true
+    if courseType == Constants.course_green then
+        self.canChangeClub = false
         return _selectClub(self, #self.clubs)
+    
+    elseif courseType == Constants.course_bunker then
+        self.canChangeClub = false
+        return _selectClub(self, #self.clubs - 1)
     end
 
     for i = 1, #self.clubs - 1 do

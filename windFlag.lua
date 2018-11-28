@@ -56,11 +56,11 @@ end
 function WindFlag:setWindSpeed(windSpeed)
     self.windSpeed = windSpeed
 
-    if windSpeed > 0 then
+    if self.windSpeed > 0 then
         self.scaleX = -1
         self.offsetX = self.quadSize * 2
     else
-        self.scaleY = 1
+        self.scaleX = 1
         self.offsetX = 0
     end
 

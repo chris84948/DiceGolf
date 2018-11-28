@@ -1,6 +1,6 @@
 Ball = Object:extend()
 
-local _shotComplete, _calculateBounce, _calculateRoll, _getTarget, _checkForHole, _getMinMoveTime, _isOutOfBounds
+local _shotComplete, _calculateBounce, _calculateRoll, _getTarget, _checkForHole, _getMinMoveTime, _isOutOfBounds, _calculateWaterHazardPosition
 
 function Ball:new(x, y, courseRef)
     self.courseX = courseRef.x
@@ -29,7 +29,7 @@ function Ball:new(x, y, courseRef)
 end
 
 function Ball:update(dt)
-    if self.speedX == 0 and self.speedY == 0 then
+    if not self.takingShot then
         return
     end
 
@@ -44,20 +44,20 @@ function Ball:update(dt)
 
     -- BOUNCE
     elseif self.moveTime <= 0 and (self.speedX ~= 0 or self.speedY ~= 0) and self.bounces == 0 then
-        _calculateBounce(self, self.courseRef:getCourseType(self.x, self.y))
+        _calculateBounce(self, self.courseRef:getCourseType())
 
     -- SHOT COMPLETE
     elseif math.abs(self.speedX) < 1 and math.abs(self.speedY) < 1 then
-        _shotComplete(self, false)
+        _shotComplete(self, Constants.shotComplete)
 
     -- ROLL
     elseif self.moveTime < 0 then
-        _calculateRoll(self, self.courseRef:getCourseType(self.x, self.y), dt)
+        _calculateRoll(self, self.courseRef:getCourseType(), dt)
     end
 
 
     if _isOutOfBounds(self) then
-        _shotComplete(self, true)
+        _shotComplete(self, Constants.shotComplete_OutOfBounds)
     end
 
     self.x = self.x + self.speedX * dt
@@ -88,6 +88,7 @@ function Ball:hit(distance, angle, windSpeed, isPutt)
 
     if isPutt then
         self.bounces = 1
+        self.moveTime = -1
     else
         self.ballRadiusIncrease = self.ballRadiusIncreaseDefault
         self.moveTime = _getMinMoveTime(self, distance)
@@ -111,6 +112,7 @@ function Ball:hit(distance, angle, windSpeed, isPutt)
 
     self.hitSpeedX = self.speedX
     self.hitSpeedY = self.speedY
+    self.takingShot = true
 end
 
 _getMinMoveTime = function(self, distance)
@@ -125,28 +127,45 @@ _getMinMoveTime = function(self, distance)
     end
 end
 
-_shotComplete = function(self, isOutOfBounds)
-    self.speedX = 0
-    self.speedY = 0
-    self.moveTimeHalf = 0
-    self.ballRadiusChanger = 0
-    
-    if isOutOfBounds then
+_shotComplete = function(self, status)
+    if status == Constants.shotComplete_OutOfBounds then
         self.x = self.startX
         self.y = self.startY
+        self.shotDistance = 0
+    elseif status == Constants.shotComplete_Water then
+        _calculateWaterHazardPosition(self)
         self.shotDistance = 0
     else
         self.shotDistance = math.sqrt((self.x - self.startX) ^ 2 + (self.y - self.startY) ^ 2) / self.pixelsPerYard
     end
 
-    self.courseRef:shotComplete(self.shotDistance, isOutOfBounds)
+    self.speedX = 0
+    self.speedY = 0
+    self.moveTime = 0
+    self.moveTimeHalf = 0
+    self.ballRadiusChanger = 0
+
+    self.courseRef:shotComplete(self.shotDistance, status)
+    self.takingShot = false
+end
+
+_calculateWaterHazardPosition = function(self)
+    local numLoops = 0
+    while (self.courseRef:getCourseType() == Constants.course_water and numLoops < 1000) do
+        self.x = self.x - self.speedX * 0.01
+        self.y = self.y - self.speedY * 0.01
+        numLoops = numLoops + 1
+        print(self.x, self.y, self.speedX * 0.01, self.speedY * 0.01)
+    end
+
+    self.y = self.y + 3
 end
 
 _calculateBounce = function(self, courseTypeID)
     if courseTypeID == Constants.course_green then
-        self.ballRadiusIncrease = self.ballRadiusIncrease / 2.5
-        self.speedX = self.speedX * 0.7
-        self.speedY = self.speedY * 0.7
+        self.ballRadiusIncrease = self.ballRadiusIncrease / 2
+        self.speedX = self.speedX * 0.8
+        self.speedY = self.speedY * 0.8
         self.moveTime = self.minMoveTime / 4
     elseif courseTypeID == Constants.course_fairway then
         self.ballRadiusIncrease = self.ballRadiusIncrease / 3
@@ -154,10 +173,12 @@ _calculateBounce = function(self, courseTypeID)
         self.speedY = self.speedY * 0.7
         self.moveTime = self.minMoveTime / 5
     elseif courseTypeID == Constants.course_rough then
-        self.ballRadiusIncrease = self.ballRadiusIncrease / 3
+        self.ballRadiusIncrease = self.ballRadiusIncrease / 4
         self.speedX = self.speedX * 0.4
         self.speedY = self.speedY * 0.4
         self.moveTime = self.minMoveTime / 8
+    elseif courseTypeID == Constants.course_water then
+        _shotComplete(self, Constants.shotComplete_Water)
     end  -- Sand/Water = no bounce
 
     self.hitSpeedX = self.speedX
@@ -167,11 +188,13 @@ end
 
 _calculateRoll = function(self, courseTypeID, dt)
     if courseTypeID == Constants.course_green then
-        self.speedX = self.speedX - 0.5 * dt * self.hitSpeedX
-        self.speedY = self.speedY - 0.5 * dt * self.hitSpeedY
+        self.speedX = self.speedX - Ext.min(0.7 * dt * self.hitSpeedX, self.speedX)
+        self.speedY = self.speedY - Ext.min(0.7 * dt * self.hitSpeedY, self.speedY)
     elseif courseTypeID == Constants.course_fairway then
-        self.speedX = self.speedX - dt * self.hitSpeedX
-        self.speedY = self.speedY - dt * self.hitSpeedY
+        self.speedX = self.speedX - Ext.min(dt * self.hitSpeedX, self.speedX)
+        self.speedY = self.speedY - Ext.min(dt * self.hitSpeedY, self.speedY)
+    elseif courseTypeID == Constants.course_water then
+        _shotComplete(self, Constants.shotComplete_Water)
     else
         self.speedX = 0.1
         self.speedY = 0.1
@@ -192,7 +215,7 @@ _checkForHole = function(self)
 
     if isOverHole and not isInAir and not isTooFast then
         self.courseRef:complete()
-    elseif isOverHole and self.ballRadiusChanger < 0.1 then
+    elseif isOverHole and self.ballRadiusChanger < 0.1 and not self.isPutt then
         self.speedX = -self.speedX * 0.5
         self.speedY = -self.speedY * 0.5
         self.hitSpeedX = self.speedX
@@ -201,7 +224,7 @@ _checkForHole = function(self)
 end
 
 _isOutOfBounds = function(self)
-    if self.x < 0 or self.x > self.courseRef.width or self.y < 0 or self.y > self.courseRef.height then
+    if self.x < 0 or self.x > self.courseRef.width or self.y < 0 or self.y > self.courseRef.height then -- Out of course
         return true
     else
         return false
