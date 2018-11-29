@@ -232,7 +232,7 @@ function courseComplete()
     if courseNum >= 9 then
         return
     end
-    
+
     shotComplete(0, 0)
     
     shotTable:addHole(courseNum, ShotTableItem(course.par, player.shotNum))
