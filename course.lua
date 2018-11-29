@@ -135,7 +135,6 @@ function Course:setShotPower(shotPower)
 end
 
 function Course:takeShot(powerMultiplier, errorAngle, windSpeed, isPutt)
-    print("takingShot", powerMultiplier, errorAngle, windSpeed)
     self.takingShot = true
     
     local courseType = self:getCourseType()

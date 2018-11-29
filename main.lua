@@ -212,6 +212,11 @@ function shotComplete(distanceHit, distanceToPin, isOutOfBounds)
     player:calculateClubForNextShot(distanceToPin, course:getCourseType())
     angleSelector:refresh()
 
+    if distanceToPin < player:getClub().distance then
+        course:setShotPower(math.ceil(distanceToPin / 5) * 5)
+        powerSelector:refresh()
+    end
+
     spinner:hide()
     fields[Constants.field_rolls]:clear()
     fields[Constants.field_rollResult]:clear()
@@ -224,6 +229,10 @@ function shotComplete(distanceHit, distanceToPin, isOutOfBounds)
 end
 
 function courseComplete()
+    if courseNum >= 9 then
+        return
+    end
+    
     shotComplete(0, 0)
     
     shotTable:addHole(courseNum, ShotTableItem(course.par, player.shotNum))

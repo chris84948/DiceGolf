@@ -109,8 +109,8 @@ function Ball:hit(distance, angle, windSpeed, isPutt)
     local finalX, finalY = _getTarget(self, distance, angle)
 
     if isPutt then
-        self.speedX = distance + 5 * math.cos(angle)
-        self.speedY = -(distance + 5) * math.sin(angle)
+        self.speedX = 1.1 * distance * math.cos(angle)
+        self.speedY = -1.1 * distance * math.sin(angle)
     else
         self.speedX = (finalX - self.x) / self.moveTime
         self.speedY = (finalY - self.y) / self.moveTime
@@ -126,8 +126,8 @@ _getMinMoveTime = function(self, distance)
 
     if moveTime < 1 then
         return 1
-    elseif moveTime > 2 then
-        return moveTime
+    elseif moveTime > 3 then
+        return 3
     else
         return moveTime
     end
@@ -217,7 +217,7 @@ _checkForHole = function(self)
     local isOverHole = self.x >= self.holeX - 6 and self.x <= self.holeX + 6 and self.y >= self.holeY - 4 and self.y <= self.holeY + 4
     local isInAir = self.ballRadiusChanger > 0  -- This can be for a hit or a bounce, but it's above ground
     local speed = math.sqrt(self.speedX ^ 2 + self.speedY ^ 2)
-    local isTooFast = self.isPutt and speed > 40 or speed > 20 
+    local isTooFast = self.isPutt and speed > 50 or speed > 25
 
     if isOverHole and not isInAir and not isTooFast then
         self.courseRef:complete()

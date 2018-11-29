@@ -24,8 +24,8 @@ Constants.courseNames = {
     "Dice Dice Birdie",
     "Harry Potter And The Prisoner Of DiceKaban",
     "To Die Fore",
-    "____",
-    "____"
+    "Driving Miss Dice-y",
+    "Die-monds are Fore-ever"
 }
 
 Constants.shotComplete = 0

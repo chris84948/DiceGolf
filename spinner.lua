@@ -63,7 +63,6 @@ end
 function Spinner:stopRotationAndGetError()
     self.isRotating = false
     local rotInDegrees = self.rotation * (180 / math.pi)
-    print(rotInDegrees)
 
     if self.isOnGreen then
         if rotInDegrees >= 209 and rotInDegrees <= 335 then
