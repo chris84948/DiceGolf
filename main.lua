@@ -1,4 +1,4 @@
-local _setEnabledOnSelectors, _refreshSelectors
+local _setEnabledOnSelectors, _refreshSelectors, _gameOver
 
 function initialize()
     love.window.setMode(1200, 800)
@@ -85,9 +85,14 @@ function love.load()
 
     diceButton = Button(140, 410, "buttons", 64, 0, diceButton_Clicked, 0, true)
     diceHand = DiceHand(150, 500, 5, 40, rollComplete)
+    gameOverField = TextField(390, 500, "GAME OVER", 80, 0.5, 0.5, defaultTextColor, redColor, 88)
 end
 
 function love.update(dt)
+    if gameOver then
+        return
+    end
+
     backgroundMusic:update(dt)
     windFlag:update(dt)
     diceHand:update(dt)
@@ -99,22 +104,33 @@ function love.update(dt)
 end
 
 function love.draw()
+    if not gameOver then
+        ballLie:draw()
+        windFlag:draw()
+        powerSelector:draw()
+        clubSelector:draw()
+        angleSelector:draw()
+        diceHand:draw()
+        diceButton:draw()
+        spinner:draw()
+
+        for i, field in ipairs(fields) do
+            field:draw()
+        end
+    end
+    
     githubLink:draw()
     shotTable:draw()
-    ballLie:draw()
-    windFlag:draw()
-    powerSelector:draw()
-    clubSelector:draw()
-    angleSelector:draw()
-    diceHand:draw()
-    diceButton:draw()
-    spinner:draw()
 
-    for i, field in ipairs(fields) do
-        field:draw()
-    end
 
     course:draw()
+
+    if gameOver then
+        fields[Constants.field_title]:draw()
+        fields[Constants.field_hole]:draw()
+        fields[Constants.field_courseName]:draw()
+        gameOverField:draw()
+    end
 end
 
 function loadCourse(courseNum) 
@@ -138,7 +154,7 @@ function love.keypressed(key)
 end
 
 function love.mousepressed(x, y, button, istouch, presses)
-    if button == 1 then
+    if button == 1 and not gameOver then
         githubLink:mousePressed(x, y)
         powerSelector:mousePressed(x, y)
         clubSelector:mousePressed(x, y)
@@ -150,7 +166,7 @@ function love.mousepressed(x, y, button, istouch, presses)
 end
 
 function love.mousereleased(x, y, button, istouch, presses)
-    if button == 1 then
+    if button == 1 and not gameOver then
         githubLink:mouseReleased()
         powerSelector:mouseReleased(x, y)
         clubSelector:mouseReleased(x, y)
@@ -162,6 +178,10 @@ function love.mousereleased(x, y, button, istouch, presses)
 end
 
 function diceButton_Clicked()
+    if gameOver then
+        return
+    end
+
     fields[Constants.field_rolls]:clear()
     fields[Constants.field_rollResult]:clear()
     _setEnabledOnSelectors(false)
@@ -172,6 +192,10 @@ function diceButton_Clicked()
 end
 
 function spinnerButton_Clicked()
+    if gameOver then
+        return
+    end
+    
     diceButton:setEnabled(false)
     course:takeShot((Debug.TurnOffDiceScore and 1.0) or diceHand.score, 
                     (Debug.TurnOffStrokeError and 0) or spinner:stopRotationAndGetError(), 
@@ -229,15 +253,16 @@ function shotComplete(distanceHit, distanceToPin, isOutOfBounds)
 end
 
 function courseComplete()
-    if courseNum >= 9 then
+    shotComplete(0, 0)
+    shotTable:addHole(courseNum, ShotTableItem(course.par, player.shotNum))
+    
+    if courseNum == 9 then
+        gameOver = true
+        _gameOver()
         return
     end
 
-    shotComplete(0, 0)
-    
-    shotTable:addHole(courseNum, ShotTableItem(course.par, player.shotNum))
     player.shotNum = 1
-    
     courseNum = courseNum + 1
     loadCourse(courseNum)    
 
@@ -257,4 +282,11 @@ _refreshSelectors = function()
     clubSelector:refresh()
     powerSelector:refresh()
     angleSelector:refresh()
+end
+
+_gameOver = function()
+    _setEnabledOnSelectors(false)
+    diceHand:reset()
+    diceButton:setEnabled(false)
+    spinner:hide()
 end

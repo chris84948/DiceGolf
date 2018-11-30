@@ -48,6 +48,7 @@ function ShotTable:addHole(hole, shotItem)
 
     self.parTotal = self.parTotal + shotItem.par
     self.score = self.score + shotItem.shotsTaken
+    print(self.parTotal, self.score)
 
     if hole == 9 then
         if self.score < self.parTotal then

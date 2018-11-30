@@ -1,6 +1,6 @@
 TextField = Object:extend()
 
-function TextField:new(x, y, text, fontSize, originX, originY, color, backgroundColor)
+function TextField:new(x, y, text, fontSize, originX, originY, color, backgroundColor, backgroundHeight)
     self.x = x
     self.y = y
     self.originX = originX or 0
@@ -10,6 +10,7 @@ function TextField:new(x, y, text, fontSize, originX, originY, color, background
     self.backgroundColor = backgroundColor
     self.width = self.text:getWidth()
     self.height = self.text:getHeight()
+    self.backgroundHeight = backgroundHeight or self.height + 10
 end
 
 function TextField:update(text)
@@ -25,7 +26,7 @@ function TextField:draw()
     if self.backgroundColor ~= nil then
         love.graphics.setColor(self.backgroundColor)
 
-        love.graphics.rectangle("fill", self.x - (self.originX * self.width + 10), self.y - (self.originY * self.height + 9), self.width + 20, self.height + 10, 5, 5)
+        love.graphics.rectangle("fill", self.x - (self.originX * self.width + 10), self.y - (self.originY * self.height + 9), self.width + 20, self.backgroundHeight, 5, 5)
 
         if self.color == nil then
             love.graphics.setColor(defaultTextColor)

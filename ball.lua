@@ -158,13 +158,16 @@ end
 
 _calculateWaterHazardPosition = function(self)
     local numLoops = 0
-    while (self.courseRef:getCourseType() == Constants.course_water and numLoops < 1000) do
+    while (self.courseRef:getCourseType() == Constants.course_water and numLoops < 10000) do
         self.x = self.x - self.speedX * 0.01
         self.y = self.y - self.speedY * 0.01
         numLoops = numLoops + 1
     end
 
-    self.y = self.y + 3
+    if numLoops == 10000 then
+        self.x = self.startX
+        self.y = self.startY
+    end
 end
 
 _calculateBounce = function(self, courseTypeID)

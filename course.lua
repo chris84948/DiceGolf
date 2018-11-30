@@ -66,11 +66,11 @@ function Course:draw()
         tile:draw()
     end
 
-    if not self.isComplete and not self.showOutOfBounds then
+    if not self.isComplete and not self.showOutOfBounds and not gameOver then
         self.ball:draw()
     end
 
-    if not self.takingShot and not self.showOutOfBounds then
+    if not self.takingShot and not self.showOutOfBounds and not gameOver then
         love.graphics.line(self.ball:getPixelX(), self.ball:getPixelY(), self.targetX + self.x, self.targetY + self.y)
     end
 
