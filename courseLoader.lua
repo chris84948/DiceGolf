@@ -2,7 +2,6 @@ local CourseLoader = {}
 local _loadObjectLayer
 
 function CourseLoader:loadCourse(num, x, y, shotComplete, courseComplete)
-    print(Debug.TestLevel)
     local filename = "courses/course" .. (Debug.TestLevel or num) .. ".json"
     local jsonString, _ = love.filesystem.read(filename)
     local courseTable = Json.decode(jsonString)
