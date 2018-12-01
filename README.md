@@ -4,7 +4,7 @@
 
 You roll the dice and take your best shot available! Good Luck!
 
-![Overview](https://raw.githubusercontent.com/chris84948/dicegolf/master/screenshots/overview.png)
+![Overview](https://raw.githubusercontent.com/chris84948/dicegolf/master/screenshots/final_game.gif)
 
 "I Dice Big Putts" was writting using Love2D (https://love2d.org/) and using the sound/music called out below.
 
